@@ -16,6 +16,10 @@ class ProductManager {
   }
 
   async addProduct(data) {
+    if (!data.title || isNaN(data.price)) {
+      throw new Error("Producto inválido");
+    }
+
     const products = await this.getProducts();
     const id = products.length ? Math.max(...products.map((p) => p.id)) + 1 : 1;
     const product = { id, status: true, ...data };
