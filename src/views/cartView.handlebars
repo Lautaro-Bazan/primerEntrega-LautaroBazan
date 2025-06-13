@@ -1,0 +1,23 @@
+<h1>Carrito {{cart._id}}</h1>
+
+<ul>
+  {{#each cart.products}}
+    <li>
+      <strong>{{this.product.title}}</strong> - ${{this.product.price}} <br />
+      Cantidad: {{this.quantity}}
+      <form action="/api/carts/{{../cart._id}}/products/{{this.product._id}}" method="POST" style="display:inline;">
+        <input type="number" name="quantity" value="{{this.quantity}}" min="1" />
+        <button type="submit">Actualizar cantidad</button>
+      </form>
+      <form action="/api/carts/{{../cart._id}}/products/{{this.product._id}}" method="POST" style="display:inline;" >
+        <input type="hidden" name="_method" value="DELETE" />
+        <button type="submit">Eliminar producto</button>
+      </form>
+    </li>
+  {{/each}}
+</ul>
+
+<form action="/api/carts/{{cart._id}}" method="POST" >
+  <input type="hidden" name="_method" value="DELETE" />
+  <button type="submit">Vaciar carrito</button>
+</form>

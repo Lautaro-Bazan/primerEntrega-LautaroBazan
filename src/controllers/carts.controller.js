@@ -1,30 +1,42 @@
-const CartManager = require("../managers/CartManager");
-const path = require("path");
-const cartManager = new CartManager(path.join(__dirname, "../db/carts.json"));
+//carts.controller.js
+const Cart = require("../models/cart.model");
 
-const createCart = async (req, res) => {
-  const cart = await cartManager.createCart();
-  res.status(201).json(cart);
-};
-
-const getCartById = async (req, res) => {
-  const cid = req.params.cid;
-  const cart = await cartManager.getCartById(cid);
-  cart
-    ? res.json(cart.products)
-    : res.status(404).json({ error: "Carrito no encontrado" });
-};
-
-const addProductToCart = async (req, res) => {
+exports.deleteProductFromCart = async (req, res) => {
   const { cid, pid } = req.params;
-  const result = await cartManager.addProductToCart(cid, pid);
-  result
-    ? res.json(result)
-    : res.status(404).json({ error: "Error al agregar producto al carrito" });
+  const cart = await Cart.findById(cid);
+  if (!cart) return res.status(404).send("Carrito no encontrado");
+
+  cart.products = cart.products.filter(p => p.product.toString() !== pid);
+  await cart.save();
+  res.send(cart);
 };
 
-module.exports = {
-  createCart,
-  getCartById,
-  addProductToCart,
+exports.updateCart = async (req, res) => {
+  const { cid } = req.params;
+  const { products } = req.body;
+  const cart = await Cart.findByIdAndUpdate(cid, { products }, { new: true });
+  res.send(cart);
+};
+
+exports.updateProductQuantity = async (req, res) => {
+  const { cid, pid } = req.params;
+  const { quantity } = req.body;
+  const cart = await Cart.findById(cid);
+  const product = cart.products.find(p => p.product.toString() === pid);
+  if (!product) return res.status(404).send("Producto no encontrado");
+  product.quantity = quantity;
+  await cart.save();
+  res.send(cart);
+};
+
+exports.clearCart = async (req, res) => {
+  const { cid } = req.params;
+  const cart = await Cart.findByIdAndUpdate(cid, { products: [] }, { new: true });
+  res.send(cart);
+};
+
+exports.getCartWithProducts = async (req, res) => {
+  const { cid } = req.params;
+  const cart = await Cart.findById(cid).populate("products.product");
+  res.render("cartView", { cart });
 };

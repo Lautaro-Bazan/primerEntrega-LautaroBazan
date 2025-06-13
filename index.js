@@ -1,12 +1,8 @@
+// index.js
 const app = require("./src/app");
 const http = require("http");
 const { Server } = require("socket.io");
-const path = require("path");
-const ProductManager = require("./src/managers/ProductManager");
-
-const productManager = new ProductManager(
-  path.join(__dirname, "src/db/products.json")
-);
+const Product = require("./src/models/product.model");
 
 const server = http.createServer(app);
 const io = new Server(server);
@@ -18,8 +14,8 @@ io.on("connection", (socket) => {
 
   socket.on("newProduct", async (data) => {
     try {
-      await productManager.addProduct(data);
-      const products = await productManager.getProducts();
+      await Product.create(data);
+      const products = await Product.find().lean();
       io.emit("updateProducts", products);
     } catch (error) {
       console.error("Error al agregar producto:", error.message);
@@ -28,8 +24,8 @@ io.on("connection", (socket) => {
 
   socket.on("deleteProduct", async (id) => {
     try {
-      await productManager.deleteProduct(id);
-      const products = await productManager.getProducts();
+      await Product.findByIdAndDelete(id);
+      const products = await Product.find().lean();
       io.emit("updateProducts", products);
     } catch (error) {
       console.error("Error al eliminar producto:", error.message);
